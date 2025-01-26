@@ -1,4 +1,5 @@
 # Standard Library Imports
+import os
 import openai
 import json
 import nltk
@@ -30,7 +31,7 @@ def load_data():
         return index
 
 #################################################################################
-# Additional, specific functions I had in the Innovation CoPilot for inspiration:
+# Additional, specific functions for keyword extraction, text preprocessing, and article selection:
 
 # Function to extract keywords from a text
 def extract_keywords(text):
@@ -67,7 +68,7 @@ def get_relevant_articles(keywords, articles, num_articles=2):
 
     return {article: articles[article] for article in most_similar_articles}
 
-# Function for constructing an index out of a knowledge base and appending indexed information to our prompt (another implementation that can be run locally rather than through github)
+# Function for constructing an index out of a knowledge base and appending indexed information to our prompt
 def construct_index(directory_path):
     if os.path.exists('index.json'):
         index = GPTSimpleVectorIndex.load_from_disk('index.json')
