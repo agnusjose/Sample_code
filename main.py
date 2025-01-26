@@ -3,6 +3,7 @@ import time
 
 # Third-Party Imports
 import streamlit as st
+import openai
 
 # Importing other files for setup and functionalities
 from setup_st import *
@@ -10,22 +11,31 @@ from helper_functions import *
 from index_functions import *
 
 # Initialize session state variables if they don't exist
-initialize_session_state()
+if 'message_count' not in st.session_state:
+    st.session_state['message_count'] = 0
+
+if 'use_index' not in st.session_state:
+    st.session_state['use_index'] = False  # or True, depending on default state
+
+if 'model_name' not in st.session_state:
+    st.session_state['model_name'] = 'gpt-3.5-turbo'  # Example model
+
+if 'api_key' in st.session_state and st.session_state['api_key']:
+    openai.api_key = st.session_state['api_key']
 
 # Setup Streamlit UI/UX elements
+initialize_session_state()
 set_design()
 sidebar()
 get_user_config()
 clear_button()
 download_button()
 
-# Setting up environment variables for OpenAI API key
-if 'api_key' in st.session_state and st.session_state['api_key']:
-    openai.api_key = st.session_state['api_key']
-
 # Setting up indexing functionality
 try:
     index = load_data()
+    if index is None:
+        raise ValueError("Index could not be loaded")
     chat_engine = index.as_chat_engine(chat_mode="condense_question", verbose=True)
 except Exception as e:
     st.sidebar.error(f"An error occurred while loading indexed data: {e}")
@@ -46,7 +56,7 @@ if prompt := st.chat_input("How would you like to reply?"):
     if prompt != "":
         with st.chat_message("user"):
             st.markdown(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt}) # Add user's message to chat history
+        st.session_state.messages.append({"role": "user", "content": prompt})  # Add user's message to chat history
 
     # Increment total message count
     st.session_state['message_count'] += 1
@@ -117,5 +127,6 @@ if prompt := st.chat_input("How would you like to reply?"):
             # Add the assistant's final full response to the session state message history
             st.session_state.messages.append({"role": "assistant", "content": full_response})
             
-    # Code to update the progress bar; assuming a message cap of 10 messages, but can be changed to be dynamic depending on your implementation.
-    current_progress = st.progress(st.session_state['message_count'] / 10)
+    # Code to update the progress bar dynamically based on the message count
+    current_progress = st.progress(st.session_state['message_count'] / len(st.session_state.messages))
+
